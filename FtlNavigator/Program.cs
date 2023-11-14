@@ -29,6 +29,6 @@ class Program
         //};
 
         var dp = new DPSolver();
-        var path = dp.Solve(graph, 0, 8);
+        var path = dp.Solve(graph, 3, 7);
     }
 }

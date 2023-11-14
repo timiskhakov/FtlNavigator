@@ -49,7 +49,7 @@ public class DPSolver
 
         // Reconstructing the path
         var path = new List<int>();
-        var set = FindSet(graph, dp, n - 1, end);
+        var set = FindMaxSet(graph, dp, end);
         var prv = end;
         while (set > 0)
         {
@@ -98,30 +98,31 @@ public class DPSolver
         return ((value) &= ~(1 << (position)));
     }
 
-    private static int FindSet(IReadOnlyDictionary<int, int[]> graph, int[,] dp, int set, int end)
+    private static int FindMaxSet(IReadOnlyDictionary<int, int[]> graph, int[,] dp, int end)
     {
-        while (set > 0)
+        var maxSet = 0;
+        for (var i = 0; i < 1 << graph.Count; i++)
         {
-            if (!CheckIfBitSet(set, end))
+            if (CheckIfBitSet(i, end) &&
+                graph.Keys.Count(v => v == end && dp[i, v] == 1) == 1 &&
+                CountBits(i) > CountBits(maxSet))
             {
-                set--;
-                continue;
+                maxSet = i;
             }
-
-            var ones = 0;
-            for (var j = 0; j < graph.Count; j++)
-            {
-                if (j == end && dp[set, j] == 1)
-                {
-                    ones++;
-                }
-            }
-
-            if (ones == 1) return set;
-            
-            set--;
         }
 
-        throw new ArgumentException();
+        return maxSet;
+    }
+
+    public static int CountBits(int value)
+    {
+        int count = 0;
+        while (value > 0)
+        {
+            count++;
+            value &= value - 1;
+        }
+
+        return count;
     }
 }
