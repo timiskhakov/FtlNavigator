@@ -9,41 +9,55 @@ public class DPSolver
     public int[] Solve(IReadOnlyDictionary<int, int[]> graph)
     {
         var n = 1 << graph.Count;
-        var dp = new int[n, graph.Count];
+        var dps = new List<int[,]>();
 
-        for (var i = 1; i < n; i++)
+        for (var d = 0; d < graph.Count; d++)
         {
-            if (CheckSingleBit(i))
+            var dp = new int[n, graph.Count];
+            for (var i = 1; i < n; i++)
             {
-                dp[i, GetSingleBitPosition(i)] = 1;
-                continue;
-            }
-
-            for (var j = 0; j < graph.Count; j++)
-            {
-                if (!CheckIfBitSet(i, j)) continue; // Skip if j-th bit is 0
-
-                var mask = ClearBit(i, j);
-                for (var k = 0; k < graph.Count; k++)
+                if (CheckSingleBit(i) && d == GetSingleBitPosition(i))
                 {
-                    // find the previous state that leads to the current state and update dp[i, j] accordingly
-                    if (CheckIfBitSet(mask, k) && graph[k].Contains(j) && dp[mask, k] == 1)
+                    dp[i, GetSingleBitPosition(i)] = 1;
+                    continue;
+                }
+
+                for (var j = 0; j < graph.Count; j++)
+                {
+                    if (!CheckIfBitSet(i, j)) continue; // Skip if j-th bit is 0
+
+                    var mask = ClearBit(i, j);
+                    for (var k = 0; k < graph.Count; k++)
                     {
-                        dp[i, j] = 1;
-                        break;
+                        // find the previous state that leads to the current state and update dp[i, j] accordingly
+                        if (CheckIfBitSet(mask, k) && graph[k].Contains(j) && dp[mask, k] == 1)
+                        {
+                            dp[i, j] = 1;
+                            break;
+                        }
                     }
                 }
             }
+
+            dps.Add(dp);
         }
 
-        for (var j = 0; j < graph.Count; j++)
-        {    
-            for (var i = 0; i < n; i++)
+        
+        foreach (var dp in dps)
+        {
+            for (var j = 0; j < graph.Count; j++)
             {
-                Console.Write($" {dp[i, j]}");
+                for (var i = 0; i < n; i++)
+                {
+                    Console.Write($" {dp[i, j]}");
+                }
+                Console.WriteLine();
             }
             Console.WriteLine();
+            Console.WriteLine();
         }
+
+        // Add more code here....
 
         return Array.Empty<int>();
     }
