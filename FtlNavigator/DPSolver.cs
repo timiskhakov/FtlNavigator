@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FtlNavigator;
 
 public class DPSolver
 {
-    public int[] Solve(IReadOnlyDictionary<int, int[]> graph)
+    public int[] Solve(IReadOnlyDictionary<int, int[]> graph, int start, int end)
     {
         var n = 1 << graph.Count;
         var dps = new List<int[,]>();
@@ -54,12 +56,27 @@ public class DPSolver
                 Console.WriteLine();
             }
             Console.WriteLine();
-            Console.WriteLine();
         }
 
-        // Add more code here....
+        // Reconstructing the path
+        var ourDP = dps[start];
+        var path = new List<int>();
 
-        return Array.Empty<int>();
+        var set = FindSet(graph, ourDP, n - 1, end);
+        while (set > 0)
+        {
+            for (var j = 0; j < graph.Count; j++)
+            {
+                if (ourDP[set, j] == 0) continue;
+
+                path.Add(j);
+                set = ClearBit(set, j);
+            }
+        }
+        
+        path.Reverse();
+
+        return path.ToArray();
     }
 
     private static bool CheckSingleBit(int value)
@@ -87,5 +104,32 @@ public class DPSolver
     private static int ClearBit(int value, int position)
     {
         return ((value) &= ~(1 << (position)));
+    }
+
+    private static int FindSet(IReadOnlyDictionary<int, int[]> graph, int[,] dp, int set, int end)
+    {
+        while (set > 0)
+        {
+            if (!CheckIfBitSet(set, end))
+            {
+                set--;
+                continue;
+            }
+
+            var ones = 0;
+            for (var j = 0; j < graph.Count; j++)
+            {
+                if (j == end && dp[set, j] == 1)
+                {
+                    ones++;
+                }
+            }
+
+            if (ones == 1) return set;
+            
+            set--;
+        }
+
+        throw new ArgumentException();
     }
 }
