@@ -11,63 +11,50 @@ public class DPSolver
     public int[] Solve(IReadOnlyDictionary<int, int[]> graph, int start, int end)
     {
         var n = 1 << graph.Count;
-        var dps = new List<int[,]>();
-
-        for (var d = 0; d < graph.Count; d++)
+        var dp = new int[n, graph.Count];
+        for (var i = 1; i < n; i++)
         {
-            var dp = new int[n, graph.Count];
-            for (var i = 1; i < n; i++)
+            if (CheckSingleBit(i) && start == GetSingleBitPosition(i))
             {
-                if (CheckSingleBit(i) && d == GetSingleBitPosition(i))
-                {
-                    dp[i, GetSingleBitPosition(i)] = 1;
-                    continue;
-                }
+                dp[i, start] = 1;
+                continue;
+            }
 
-                for (var j = 0; j < graph.Count; j++)
-                {
-                    if (!CheckIfBitSet(i, j)) continue; // Skip if j-th bit is 0
+            for (var j = 0; j < graph.Count; j++)
+            {
+                if (!CheckIfBitSet(i, j)) continue; // Skip if j-th bit is 0
 
-                    var mask = ClearBit(i, j);
-                    for (var k = 0; k < graph.Count; k++)
+                var mask = ClearBit(i, j);
+                for (var k = 0; k < graph.Count; k++)
+                {
+                    // find the previous state that leads to the current state and update dp[i, j] accordingly
+                    if (CheckIfBitSet(mask, k) && graph[k].Contains(j) && dp[mask, k] == 1)
                     {
-                        // find the previous state that leads to the current state and update dp[i, j] accordingly
-                        if (CheckIfBitSet(mask, k) && graph[k].Contains(j) && dp[mask, k] == 1)
-                        {
-                            dp[i, j] = 1;
-                            break;
-                        }
+                        dp[i, j] = 1;
+                        break;
                     }
                 }
             }
-
-            dps.Add(dp);
         }
-
         
-        foreach (var dp in dps)
+        for (var j = 0; j < graph.Count; j++)
         {
-            for (var j = 0; j < graph.Count; j++)
+            for (var i = 0; i < n; i++)
             {
-                for (var i = 0; i < n; i++)
-                {
-                    Console.Write($" {dp[i, j]}");
-                }
-                Console.WriteLine();
+                Console.Write($" {dp[i, j]}");
             }
             Console.WriteLine();
         }
+        Console.WriteLine();
 
         // Reconstructing the path
-        var ourDP = dps[start];
         var path = new List<int>();
-
-        var set = FindSet(graph, ourDP, n - 1, end);
+        var set = FindSet(graph, dp, n - 1, end);
         while (set > 0)
         {
             for (var j = graph.Count - 1; j >= 0; j--)
             {
-                if (ourDP[set, j] == 0) continue;
+                if (dp[set, j] == 0) continue;
 
                 path.Add(j);
                 set = ClearBit(set, j);
@@ -75,10 +62,9 @@ public class DPSolver
                 break;
             }
         }
-        
+
         path.Reverse();
 
-        
         return path.ToArray();
     }
 
