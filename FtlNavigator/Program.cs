@@ -24,8 +24,8 @@ class Program
         //{
         //    [0] = new int[] { 1, 2 },
         //    [1] = new int[] { 0, 2, 3 },
-        //    [2] = new int[] { 0, 1, 3 },
-        //    [3] = new int[] { 1, 2 }
+        //    [2] = new int[] { 0, 1 },
+        //    [3] = new int[] { 1 }
         //};
 
         var dp = new DPSolver();

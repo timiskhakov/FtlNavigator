@@ -50,13 +50,16 @@ public class DPSolver
         // Reconstructing the path
         var path = new List<int>();
         var set = FindSet(graph, dp, n - 1, end);
+        var prv = end;
         while (set > 0)
         {
             for (var j = graph.Count - 1; j >= 0; j--)
             {
                 if (dp[set, j] == 0) continue;
+                if (prv != j && !graph[j].Contains(prv)) continue;
 
                 path.Add(j);
+                prv = j;
                 set = ClearBit(set, j);
 
                 break;
