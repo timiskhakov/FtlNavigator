@@ -65,17 +65,20 @@ public class DPSolver
         var set = FindSet(graph, ourDP, n - 1, end);
         while (set > 0)
         {
-            for (var j = 0; j < graph.Count; j++)
+            for (var j = graph.Count - 1; j >= 0; j--)
             {
                 if (ourDP[set, j] == 0) continue;
 
                 path.Add(j);
                 set = ClearBit(set, j);
+
+                break;
             }
         }
         
         path.Reverse();
 
+        
         return path.ToArray();
     }
 
