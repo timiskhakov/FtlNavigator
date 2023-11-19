@@ -3,9 +3,9 @@ using System.Linq;
 
 namespace FtlNavigator;
 
-public class DfsSolver
+public static class DfsSolver
 {
-    public int[] Solve(IReadOnlyDictionary<int, int[]> graph, int start, int end)
+    public static int[] Solve(Dictionary<int, HashSet<int>> graph, int start, int end)
     {
         var solutions = new List<int[]>();
         var visited = new bool[graph.Count];
@@ -19,8 +19,8 @@ public class DfsSolver
             .ToArray();
     }
 
-    private void Dfs(
-        IReadOnlyDictionary<int, int[]> graph,
+    private static void Dfs(
+        Dictionary<int, HashSet<int>> graph,
         List<int[]> solutions,
         bool[] visited,
         Stack<int> path,

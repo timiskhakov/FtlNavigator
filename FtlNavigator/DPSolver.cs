@@ -1,91 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace FtlNavigator;
 
-public class DPSolver
+public static class DpSolver
 {
-    public int[] Solve(IReadOnlyDictionary<int, int[]> graph, int start, int end)
+    public static int[] Solve(Dictionary<int, HashSet<int>> graph, int start, int end)
     {
-        var n = 1 << graph.Count;
-        var dp = new int[n, graph.Count];
-        for (var i = 1; i < n; i++)
-        {
-            if (CheckSingleBit(i) && start == GetSingleBitPosition(i))
-            {
-                dp[i, start] = 1;
-                continue;
-            }
-
-            for (var j = 0; j < graph.Count; j++)
-            {
-                if (!CheckIfBitSet(i, j)) continue; // Skip if j-th bit is 0
-
-                var mask = ClearBit(i, j);
-                for (var k = 0; k < graph.Count; k++)
-                {
-                    // find the previous state that leads to the current state and update dp[i, j] accordingly
-                    if (CheckIfBitSet(mask, k) && graph[k].Contains(j) && dp[mask, k] == 1)
-                    {
-                        dp[i, j] = 1;
-                        break;
-                    }
-                }
-            }
-        }
-        
-        for (var j = 0; j < graph.Count; j++)
-        {
-            for (var i = 0; i < n; i++)
-            {
-                Console.Write($" {dp[i, j]}");
-            }
-            Console.WriteLine();
-        }
-        Console.WriteLine();
-
-        // Reconstructing the path
-        var path = new List<int>();
-        var set = FindMaxSet(graph, dp, end);
-        var prv = end;
-        while (set > 0)
-        {
-            for (var j = graph.Count - 1; j >= 0; j--)
-            {
-                if (dp[set, j] == 0) continue;
-                if (prv != j && !graph[j].Contains(prv)) continue;
-
-                path.Add(j);
-                prv = j;
-                set = ClearBit(set, j);
-
-                break;
-            }
-        }
-
-        path.Reverse();
+        var dp = CreateDp(graph, start);
+        var subset = FindMaxSubset(dp, end);
+        var path = ReconstructPath(graph, dp, subset, end);
 
         return path.ToArray();
     }
 
-    private static bool CheckSingleBit(int value)
+    private static bool[,] CreateDp(Dictionary<int, HashSet<int>> graph, int start)
     {
-        return (value & (value - 1)) == 0;
-    }
-
-    private static int GetSingleBitPosition(int value)
-    {
-        int count = 0;
-        while (value > 0)
+        var n = 1 << graph.Count;
+        var dp = new bool[n, graph.Count];
+        dp[1 << start , start] = true;
+        
+        for (var i = 1 << start; i < n; i++)
+        for (var j = 0; j < graph.Count; j++)
         {
-            value >>= 1;
-            count++;
+            if (!CheckIfBitSet(i, j)) continue;
+            var mask = ClearBit(i, j);
+            for (var k = 0; k < graph.Count; k++)
+            {
+                if (!dp[mask, k] || !graph[k].Contains(j)) continue;
+                dp[i, j] = true;
+                break;
+            }
         }
 
-        return count - 1;
+        return dp;
+    }
+    
+    private static int FindMaxSubset(bool[,] dp, int end)
+    {
+        var maxSubset = 0;
+        for (var i = 0; i < dp.GetLength(0); i++)
+        {
+            if (!CheckIfBitSet(i, end) ||
+                !dp[i, end] ||
+                CountBits(i) <= CountBits(maxSubset)) continue;
+            maxSubset = i;
+        }
+        
+        return maxSubset;
+    }
+
+    private static Stack<int> ReconstructPath(Dictionary<int, HashSet<int>> graph, bool[,] dp, int subset, int end)
+    {
+        var path = new Stack<int>(new[] { end });
+        while (subset > 0)
+        {
+            subset = ClearBit(subset, end);
+            for (var j = 0; j < graph.Count; j++)
+            {
+                if (!dp[subset, j] || !graph[j].Contains(end)) continue;
+                path.Push(j);
+                end = j;
+                break;
+            }
+        }
+
+        return path;
     }
 
     private static bool CheckIfBitSet(int value, int position)
@@ -95,28 +74,12 @@ public class DPSolver
 
     private static int ClearBit(int value, int position)
     {
-        return ((value) &= ~(1 << (position)));
+        return value & ~(1 << position);
     }
-
-    private static int FindMaxSet(IReadOnlyDictionary<int, int[]> graph, int[,] dp, int end)
+    
+    private static int CountBits(int value)
     {
-        var maxSet = 0;
-        for (var i = 0; i < 1 << graph.Count; i++)
-        {
-            if (CheckIfBitSet(i, end) &&
-                graph.Keys.Count(v => v == end && dp[i, v] == 1) == 1 &&
-                CountBits(i) > CountBits(maxSet))
-            {
-                maxSet = i;
-            }
-        }
-
-        return maxSet;
-    }
-
-    public static int CountBits(int value)
-    {
-        int count = 0;
+        var count = 0;
         while (value > 0)
         {
             count++;
